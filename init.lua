@@ -153,23 +153,18 @@ require('lazy').setup({
 
   -- "gc" to comment visual regions/lines
   { 'numToStr/Comment.nvim', opts = {} },
-
-  -- Here is a more advanced example where we pass configuration
-  -- options to `gitsigns.nvim`. This is equivalent to the following Lua:
-  --    require('gitsigns').setup({ ... })
   --
   -- See `:help gitsigns` to understand what the configuration keys do
-  { -- Adds git related signs to the gutter, as well as utilities for managing changes
+  { -- Useful plugin to show you pending keybinds.
     'lewis6991/gitsigns.nvim',
-    opts = {
-      signs = {
-        add = { text = '+' },
-        change = { text = '~' },
-        delete = { text = '_' },
-        topdelete = { text = '‾' },
-        changedelete = { text = '~' },
-      },
-    },
+    event = 'VimEnter', -- Sets the loading event to 'VimEnter'
+    config = function() -- This is the function that runs, AFTER loading
+      require('gitsigns').setup()
+      vim.api.nvim_set_keymap('n', '<leader>g]', ':Gitsigns next_hunk<CR>', { noremap = true })
+      vim.api.nvim_set_keymap('n', '<leader>g[', ':Gitsigns prev_hunk<CR>', { noremap = true })
+      vim.api.nvim_set_keymap('n', '<leader>gp', ':Gitsigns preview_hunk_inline<CR>', { noremap = true })
+      vim.api.nvim_set_keymap('n', '<leader>gr', ':Gitsigns reset_hunk<CR>', { noremap = true })
+    end,
   },
 
   -- NOTE: Plugins can also be configured to run Lua code when they are loaded.
@@ -197,9 +192,12 @@ require('lazy').setup({
       require('which-key').register {
         ['<leader>c'] = { name = '[C]ode', _ = 'which_key_ignore' },
         ['<leader>d'] = { name = '[D]ocument', _ = 'which_key_ignore' },
+        ['<leader>g'] = { name = '[G]it', _ = 'which_key_ignore' },
         ['<leader>r'] = { name = '[R]ename', _ = 'which_key_ignore' },
         ['<leader>s'] = { name = '[S]earch', _ = 'which_key_ignore' },
         ['<leader>w'] = { name = '[W]orkspace', _ = 'which_key_ignore' },
+        ['<leader>n'] = { name = '[N]eotree', _ = 'which_key_ignore' },
+        ['<leader>t'] = { name = '[T]est', _ = 'which_key_ignore' },
       }
     end,
   },
@@ -453,7 +451,18 @@ require('lazy').setup({
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
         -- clangd = {},
-        gopls = {},
+        gopls = {
+          settings = {
+            gopls = {
+              analyses = {
+                unusedparams = true,
+              },
+              staticcheck = true,
+              gofumpt = true,
+              buildFlags = { '-tags=integration' },
+            },
+          },
+        },
         -- pyright = {},
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
@@ -665,7 +674,7 @@ require('lazy').setup({
       -- Load the colorscheme here.
       -- Like many other themes, this one has different styles, and you could load
       -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'tokyonight-day'
+      vim.cmd.colorscheme 'tokyonight-storm'
 
       -- You can configure highlights by doing something like:
       vim.cmd.hi 'Comment gui=none'
@@ -759,13 +768,33 @@ vim.api.nvim_set_keymap('i', 'jk', '<Esc>', { noremap = true })
 vim.api.nvim_set_keymap('n', '\\', ':Neotree toggle current reveal_force_cwd<CR>', { noremap = true })
 vim.api.nvim_set_keymap('n', '<leader>nl', ':Neotree toggle <CR>', { noremap = true })
 vim.api.nvim_set_keymap('n', '<leader>nr', ':Neotree toggle show buffers right<CR>', { noremap = true })
+vim.api.nvim_set_keymap('n', '<leader>ns', ':Neotree float git_status<CR>', { noremap = true })
 
--- nnoremap / :Neotree toggle current reveal_force_cwd<cr>
--- nnoremap | :Neotree reveal<cr>
--- nnoremap gd :Neotree float reveal_file=<cfile> reveal_force_cwd<cr>
--- nnoremap <leader>b :Neotree toggle show buffers right<cr>
--- nnoremap <leader>s :Neotree float git_status<cr>
---
+-- Go tests
+vim.api.nvim_set_keymap('n', '<leader>td', ":lcd %:p:h<CR> | :lua require('dap-go').debug_test()<CR>", { noremap = true })
+
+vim.api.nvim_create_autocmd('BufWritePre', {
+  pattern = '*.go',
+  callback = function()
+    local params = vim.lsp.util.make_range_params()
+    params.context = { only = { 'source.organizeImports' } }
+    -- buf_request_sync defaults to a 1000ms timeout. Depending on your
+    -- machine and codebase, you may want longer. Add an additional
+    -- argument after params if you find that you have to write the file
+    -- twice for changes to be saved.
+    -- E.g., vim.lsp.buf_request_sync(0, "textDocument/codeAction", params, 3000)
+    local result = vim.lsp.buf_request_sync(0, 'textDocument/codeAction', params)
+    for cid, res in pairs(result or {}) do
+      for _, r in pairs(res.result or {}) do
+        if r.edit then
+          local enc = (vim.lsp.get_client_by_id(cid) or {}).offset_encoding or 'utf-16'
+          vim.lsp.util.apply_workspace_edit(r.edit, enc)
+        end
+      end
+    end
+    vim.lsp.buf.format { async = false }
+  end,
+})
 -- End my stuff
 
 -- The line beneath this is called `modeline`. See `:help modeline`
