@@ -65,7 +65,6 @@ return {
     -- dap.listeners.before.event_terminated['dapui_config'] = dapui.close
     -- dap.listeners.before.event_exited['dapui_config'] = dapui.close
 
-    require('dap.ext.vscode').load_launchjs(nil, {})
     require('dap-go').setup {
       -- Additional dap configurations can be added.
       -- dap_configurations accepts a list of tables where each entry

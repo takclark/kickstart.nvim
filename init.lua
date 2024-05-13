@@ -159,7 +159,20 @@ require('lazy').setup({
     'lewis6991/gitsigns.nvim',
     event = 'VimEnter', -- Sets the loading event to 'VimEnter'
     config = function() -- This is the function that runs, AFTER loading
-      require('gitsigns').setup()
+      require('gitsigns').setup {
+        current_line_blame = true, -- Toggle with `:Gitsigns toggle_current_line_blame`
+        current_line_blame_opts = {
+          virt_text = true,
+          virt_text_pos = 'eol', -- 'eol' | 'overlay' | 'right_align'
+          delay = 1000,
+          ignore_whitespace = false,
+          virt_text_priority = 100,
+        },
+        current_line_blame_formatter = '<author>, <author_time:%Y-%m-%d> - <summary>',
+        current_line_blame_formatter_opts = {
+          relative_time = false,
+        },
+      }
       vim.api.nvim_set_keymap('n', '<leader>g]', ':Gitsigns next_hunk<CR>', { noremap = true })
       vim.api.nvim_set_keymap('n', '<leader>g[', ':Gitsigns prev_hunk<CR>', { noremap = true })
       vim.api.nvim_set_keymap('n', '<leader>gp', ':Gitsigns preview_hunk_inline<CR>', { noremap = true })
@@ -193,10 +206,11 @@ require('lazy').setup({
         ['<leader>c'] = { name = '[C]ode', _ = 'which_key_ignore' },
         ['<leader>d'] = { name = '[D]ocument', _ = 'which_key_ignore' },
         ['<leader>g'] = { name = '[G]it', _ = 'which_key_ignore' },
+        ['<leader>j'] = { name = '[J]ustworks', _ = 'which_key_ignore' },
+        ['<leader>n'] = { name = '[N]eotree', _ = 'which_key_ignore' },
         ['<leader>r'] = { name = '[R]ename', _ = 'which_key_ignore' },
         ['<leader>s'] = { name = '[S]earch', _ = 'which_key_ignore' },
         ['<leader>w'] = { name = '[W]orkspace', _ = 'which_key_ignore' },
-        ['<leader>n'] = { name = '[N]eotree', _ = 'which_key_ignore' },
         ['<leader>t'] = { name = '[T]est', _ = 'which_key_ignore' },
       }
     end,
@@ -725,11 +739,19 @@ require('lazy').setup({
     'nvim-treesitter/nvim-treesitter',
     build = ':TSUpdate',
     opts = {
-      ensure_installed = { 'bash', 'c', 'elixir', 'go', 'html', 'lua', 'luadoc', 'markdown', 'vim', 'vimdoc' },
+      ensure_installed = { 'bash', 'c', 'elixir', 'go', 'html', 'lua', 'luadoc', 'markdown', 'python', 'vim', 'vimdoc' },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
         enable = true,
+
+        disable = function(lang, buf)
+          local max_filesize = 100 * 1024 -- 100 KB
+          local ok, stats = pcall(vim.loop.fs_stat, vim.api.nvim_buf_get_name(buf))
+          if ok and stats and stats.size > max_filesize and lang == 'sql' then
+            return true
+          end
+        end,
         -- Some languages depend on vim's regex highlighting system (such as Ruby) for indent rules.
         --  If you are experiencing weird indenting issues, add the language to
         --  the list of additional_vim_regex_highlighting and disabled languages for indent.
@@ -763,12 +785,29 @@ require('lazy').setup({
   },
 })
 
+-- turn off wrap for fixed-width files
+vim.api.nvim_create_autocmd('BufEnter', {
+  pattern = { '*_rts.txt', '*_pts.txt' },
+  callback = function()
+    vim.opt.wrap = false
+  end,
+})
+
+-- turn off wrap for fixed-width files
+vim.api.nvim_create_autocmd('BufEnter', {
+  pattern = { '*_rts.txt', '*_pts.txt' },
+  callback = function()
+    vim.opt.wrap = false
+  end,
+})
 -- My stuff in here
 vim.api.nvim_set_keymap('i', 'jk', '<Esc>', { noremap = true })
 vim.api.nvim_set_keymap('n', '\\', ':Neotree toggle current reveal_force_cwd<CR>', { noremap = true })
 vim.api.nvim_set_keymap('n', '<leader>nl', ':Neotree toggle <CR>', { noremap = true })
 vim.api.nvim_set_keymap('n', '<leader>nr', ':Neotree toggle show buffers right<CR>', { noremap = true })
 vim.api.nvim_set_keymap('n', '<leader>ns', ':Neotree float git_status<CR>', { noremap = true })
+
+vim.api.nvim_set_keymap('n', '<leader>jv', ':lua require("dap.ext.vscode").load_launchjs(nil, {})<CR>', { noremap = true })
 
 -- Go tests
 vim.api.nvim_set_keymap('n', '<leader>td', ":lcd %:p:h<CR> | :lua require('dap-go').debug_test()<CR>", { noremap = true })
