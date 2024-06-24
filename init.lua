@@ -477,6 +477,9 @@ require('lazy').setup({
             },
           },
         },
+
+        elixirls = {},
+
         -- pyright = {},
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
@@ -563,7 +566,7 @@ require('lazy').setup({
       formatters_by_ft = {
         lua = { 'stylua' },
         -- Conform can also run multiple formatters sequentially
-        -- python = { "isort", "black" },
+        -- python = { 'isort', 'black' },
         --
         -- You can use a sub-list to tell conform to run *until* a formatter
         -- is found.
@@ -688,7 +691,7 @@ require('lazy').setup({
       -- Load the colorscheme here.
       -- Like many other themes, this one has different styles, and you could load
       -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'tokyonight-storm'
+      vim.cmd.colorscheme 'tokyonight-day'
 
       -- You can configure highlights by doing something like:
       vim.cmd.hi 'Comment gui=none'
@@ -787,7 +790,7 @@ require('lazy').setup({
 
 -- turn off wrap for fixed-width files
 vim.api.nvim_create_autocmd('BufEnter', {
-  pattern = { '*_rts.txt', '*_pts.txt' },
+  pattern = { '*_rts.txt', '*_pts.txt', '*_mwr.txt', '*.ach' },
   callback = function()
     vim.opt.wrap = false
   end,

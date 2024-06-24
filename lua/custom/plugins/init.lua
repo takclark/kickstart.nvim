@@ -733,4 +733,5 @@ return {
       -- debug = false -- Prints errors and the command which is run.
     },
   },
+  { 'github/copilot.vim' },
 }
