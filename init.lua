@@ -169,9 +169,6 @@ require('lazy').setup({
           virt_text_priority = 100,
         },
         current_line_blame_formatter = '<author>, <author_time:%Y-%m-%d> - <summary>',
-        current_line_blame_formatter_opts = {
-          relative_time = false,
-        },
       }
       vim.api.nvim_set_keymap('n', '<leader>g]', ':Gitsigns next_hunk<CR>', { noremap = true })
       vim.api.nvim_set_keymap('n', '<leader>g[', ':Gitsigns prev_hunk<CR>', { noremap = true })
@@ -425,7 +422,6 @@ require('lazy').setup({
         },
 
         ruby_lsp = {},
-        tsserver = {},
       }
 
       -- Ensure the servers and tools above are installed
