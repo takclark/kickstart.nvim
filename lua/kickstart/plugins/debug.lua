@@ -83,7 +83,7 @@ return {
       delve = {
         -- the path to the executable dlv which will be used for debugging.
         -- by default, this is the "dlv" executable on your PATH.
-        path = 'dlv',
+        path = '/Users/tylerclark/go/bin/dlv',
         -- time to wait for delve to initialize the debug session.
         -- default to 20 seconds
         initialize_timeout_sec = 20,
