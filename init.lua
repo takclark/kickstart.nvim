@@ -237,7 +237,6 @@ require('lazy').setup({
         },
       },
 
-
       -- Document existing key chains
       spec = {
         { '<leader>c', group = '[C]ode', mode = { 'n', 'x' } },
@@ -898,14 +897,7 @@ vim.api.nvim_create_autocmd('BufEnter', {
     vim.opt.wrap = false
   end,
 })
-
--- turn off wrap for fixed-width files
-vim.api.nvim_create_autocmd('BufEnter', {
-  pattern = { '*_rts.txt', '*_pts.txt' },
-  callback = function()
-    vim.opt.wrap = false
-  end,
-})
+--
 -- My stuff in here
 vim.api.nvim_set_keymap('i', 'jk', '<Esc>', { noremap = true })
 vim.api.nvim_set_keymap('n', '\\', ':Neotree toggle current reveal_force_cwd<CR>', { noremap = true })
@@ -941,44 +933,27 @@ vim.api.nvim_create_autocmd('BufWritePre', {
   end,
 })
 
-local function add_ruby_deps_command(client, bufnr)
-  vim.api.nvim_buf_create_user_command(bufnr, 'ShowRubyDeps', function(opts)
-    local params = vim.lsp.util.make_text_document_params()
-    local showAll = opts.args == 'all'
+local lspconfig = require 'lspconfig'
+lspconfig.util.on_setup = lspconfig.util.add_hook_before(lspconfig.util.on_setup, function(config)
+  if config.name == 'ruby_lsp' then
+    config.root_dir = lspconfig.util.root_pattern('Gemfile', '.git')
+    config.cmd = { '/Users/tylerclark/.asdf/installs/ruby/3.1.6/bin/ruby-lsp' }
+  end
+end)
 
-    client.request('rubyLsp/workspace/dependencies', params, function(error, result)
-      if error then
-        print('Error showing deps: ' .. error)
-        return
-      end
-
-      local qf_list = {}
-      for _, item in ipairs(result) do
-        if showAll or item.dependency then
-          table.insert(qf_list, {
-            text = string.format('%s (%s) - %s', item.name, item.version, item.dependency),
-            filename = item.path,
-          })
-        end
-      end
-
-      vim.fn.setqflist(qf_list)
-      vim.cmd 'copen'
-    end, bufnr)
-  end, {
-    nargs = '?',
-    complete = function()
-      return { 'all' }
-    end,
-  })
-end
-
-require('lspconfig').ruby_lsp.setup {
-  on_attach = function(client, buffer)
-    add_ruby_deps_command(client, buffer)
+vim.api.nvim_create_autocmd('VimEnter', {
+  callback = function()
+    -- Check if a file was passed as an argument
+    if vim.fn.argc() == 0 then
+      -- No file was opened, open NeoTree
+      vim.cmd 'Neotree toggle'
+    else
+      -- A file was opened, still open NeoTree but focus on the file
+      vim.cmd 'Neotree show'
+    end
   end,
-}
--- End my stuff
+  desc = 'Open NeoTree on startup',
+}) -- End my stuff
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
