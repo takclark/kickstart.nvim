@@ -594,9 +594,6 @@ require('lazy').setup({
             },
           },
         },
-
-        ruby_lsp = {},
-        ts_ls = {},
       }
 
       -- Ensure the servers and tools above are installed
@@ -793,7 +790,7 @@ require('lazy').setup({
       -- Load the colorscheme here.
       -- Like many other themes, this one has different styles, and you could load
       -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'tokyonight-day'
+      vim.cmd.colorscheme 'tokyonight-storm'
 
       -- You can configure highlights by doing something like:
       vim.cmd.hi 'Comment gui=none'
@@ -906,17 +903,10 @@ require('lazy').setup({
   },
 })
 
--- turn off wrap for fixed-width files
-vim.api.nvim_create_autocmd('BufEnter', {
-  pattern = { '*_rts.txt', '*_pts.txt', '*_mwr.txt', '*.ach' },
-  callback = function()
-    vim.opt.wrap = false
-  end,
-})
 --
 -- My stuff in here
 vim.api.nvim_set_keymap('i', 'jk', '<Esc>', { noremap = true })
-vim.api.nvim_set_keymap('n', '\\', ':Neotree toggle current reveal_force_cwd<CR>', { noremap = true })
+vim.api.nvim_set_keymap('n', '\\', ':Neotree toggle<CR>', { noremap = true })
 vim.api.nvim_set_keymap('n', '<leader>nl', ':Neotree toggle <CR>', { noremap = true })
 vim.api.nvim_set_keymap('n', '<leader>nr', ':Neotree toggle show buffers right<CR>', { noremap = true })
 vim.api.nvim_set_keymap('n', '<leader>ns', ':Neotree float git_status<CR>', { noremap = true })
@@ -949,24 +939,9 @@ vim.api.nvim_create_autocmd('BufWritePre', {
   end,
 })
 
-local lspconfig = require 'lspconfig'
-lspconfig.util.on_setup = lspconfig.util.add_hook_before(lspconfig.util.on_setup, function(config)
-  if config.name == 'ruby_lsp' then
-    config.root_dir = lspconfig.util.root_pattern('Gemfile', '.git')
-    config.cmd = { '/Users/tylerclark/.asdf/installs/ruby/3.1.6/bin/ruby-lsp' }
-  end
-end)
-
 vim.api.nvim_create_autocmd('VimEnter', {
   callback = function()
-    -- Check if a file was passed as an argument
-    if vim.fn.argc() == 0 then
-      -- No file was opened, open NeoTree
-      vim.cmd 'Neotree toggle'
-    else
-      -- A file was opened, still open NeoTree but focus on the file
-      vim.cmd 'Neotree show'
-    end
+    vim.cmd 'Neotree show'
   end,
   desc = 'Open NeoTree on startup',
 }) -- End my stuff
